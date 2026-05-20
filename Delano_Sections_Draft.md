@@ -1,6 +1,6 @@
 # AXIOM D1 — Final Design Report: Delano's Sections
 
-> **Author:** Delano D. White (400011585)
+> **Author:** Delano D. Montplaisir (400011585)
 > **Team:** Code Blooded
 > **Sections:** 3, 4, 5A, 5B, 5D, 6
 
