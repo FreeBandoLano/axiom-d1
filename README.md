@@ -151,6 +151,6 @@ python3 gazebo_sim/plot_sim_data.py   # requires matplotlib
 
 ## Team
 
-**Code Blooded** — Delano D. White · Deborah McDougall · Enya Cariah
+**Code Blooded** — Delano D. Montplaisir · Deborah McDougall · Enya Cariah
 
 Submitted for the UWIRS × ESS Robotics Design Competition.
