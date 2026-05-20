@@ -1,0 +1,32 @@
+# Code Blooded — UWIRS x ESS Robotics Design Competition
+# Project: AXIOM D1 — Amphibious Drain-Cleaning Robot
+# SDG 6: Clean Water and Sanitation
+
+## Team
+- Delano D. White — 400011585
+- Deborah McDougall — 816046503
+- Enya Cariah — 816050460
+
+## Project Structure
+- Rubric/                                  — Competition documents, rubric, reference papers
+- Rubric/ROBOTICS COMPETITION PROPOSAL.docx — Finished Stage 1 proposal (submitted)
+- Proposal_Draft.txt                       — Original proposal content draft
+- Final_Design_Draft.txt                   — Stage 2 final design report draft
+
+## Status — Stage 1 (Proposal, Formative Feedback)
+- [x] Proposal draft created (2026-03-03)
+- [x] System name chosen: AXIOM D1
+- [x] Team details filled in
+- [x] Formatted and finalized as .docx
+- [ ] Awaiting formative feedback
+
+## Status — Stage 2 (Final Design, 100% of marks)
+- [x] Full draft created (2026-03-07) — Final_Design_Draft.txt
+- [ ] Redraw system architecture as clean vector diagram (draw.io/Figma)
+- [ ] Create CAD model / robot sketches
+- [ ] Format into IEEE two-column layout
+- [ ] Develop mobile app prototype (MIT App Inventor or Flutter)
+- [ ] Write ESP32 firmware
+- [ ] Build and test physical prototype
+- [ ] Field testing at UWI campus drains
+- [ ] Final review and submission

@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="drain_channel">
+    <static>true</static>
+
+    <!-- ============================================================ -->
+    <!--  DRAIN FLOOR                                                 -->
+    <!--  Concrete U-channel: 450mm wide, 10m long                    -->
+    <!-- ============================================================ -->
+    <link name="floor">
+      <pose>0 0 0 0 0 0</pose>
+
+      <collision name="floor_collision">
+        <geometry>
+          <box>
+            <size>10.0 0.45 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.5</mu>
+              <mu2>0.5</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <visual name="floor_visual">
+        <geometry>
+          <box>
+            <size>10.0 0.45 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.6 0.6 0.55 1</ambient>
+          <diffuse>0.7 0.7 0.65 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- ============================================================ -->
+    <!--  LEFT WALL (300mm high)                                      -->
+    <!-- ============================================================ -->
+    <link name="left_wall">
+      <pose>0 0.25 0.15 0 0 0</pose>
+
+      <collision name="left_wall_collision">
+        <geometry>
+          <box>
+            <size>10.0 0.05 0.30</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="left_wall_visual">
+        <geometry>
+          <box>
+            <size>10.0 0.05 0.30</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.55 0.55 0.50 1</ambient>
+          <diffuse>0.65 0.65 0.60 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- ============================================================ -->
+    <!--  RIGHT WALL (300mm high)                                     -->
+    <!-- ============================================================ -->
+    <link name="right_wall">
+      <pose>0 -0.25 0.15 0 0 0</pose>
+
+      <collision name="right_wall_collision">
+        <geometry>
+          <box>
+            <size>10.0 0.05 0.30</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="right_wall_visual">
+        <geometry>
+          <box>
+            <size>10.0 0.05 0.30</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.55 0.55 0.50 1</ambient>
+          <diffuse>0.65 0.65 0.60 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+        </material>
+      </visual>
+    </link>
+
+    <!-- ============================================================ -->
+    <!--  SHALLOW WATER (visual only, 10cm depth)                     -->
+    <!--  Transparent blue layer on drain floor                       -->
+    <!-- ============================================================ -->
+    <link name="water">
+      <pose>0 0 0.075 0 0 0</pose>
+
+      <visual name="water_visual">
+        <geometry>
+          <box>
+            <size>10.0 0.45 0.10</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1 0.3 0.5 0.4</ambient>
+          <diffuse>0.15 0.4 0.6 0.4</diffuse>
+          <specular>0.5 0.5 0.5 1</specular>
+        </material>
+        <transparency>0.6</transparency>
+      </visual>
+    </link>
+
+    <!-- ============================================================ -->
+    <!--  ALGAE PATCHES (visual — green discoloration on floor)       -->
+    <!-- ============================================================ -->
+    <link name="algae_patch_1">
+      <pose>1.5 0.05 0.026 0 0 0</pose>
+      <visual name="algae_1_visual">
+        <geometry>
+          <box>
+            <size>0.8 0.30 0.002</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.1 0.4 0.1 1</ambient>
+          <diffuse>0.15 0.5 0.15 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <link name="algae_patch_2">
+      <pose>-2.0 -0.05 0.026 0 0 0.15</pose>
+      <visual name="algae_2_visual">
+        <geometry>
+          <box>
+            <size>1.2 0.25 0.002</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.08 0.35 0.08 1</ambient>
+          <diffuse>0.12 0.45 0.12 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+  </model>
+</sdf>

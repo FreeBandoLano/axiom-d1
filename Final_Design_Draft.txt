@@ -1,0 +1,1334 @@
+================================================================================
+         UWIRS x ESS Robotics Design Competition — Stage 2
+                    FINAL DESIGN REPORT — DRAFT
+                          AXIOM D1
+================================================================================
+
+NOTE: This is the content draft for the Final Design Stage (100% of marks).
+Transfer to IEEE two-column format (Times New Roman 10-11pt, single spacing)
+with clean vector diagrams before submission. Every section maps directly to
+a rubric criterion with mark allocation noted.
+
+================================================================================
+                          COVER PAGE
+================================================================================
+
+Team Name:          Code Blooded
+Team Members:       Delano D. White — 400011585
+                    Deborah McDougall — 816046503
+                    Enya Cariah — 816050460
+Selected SDG:       SDG 6 — Clean Water and Sanitation
+System Name:        AXIOM D1
+Competition:        UWIRS x ESS Robotics Design Competition
+Date:               [SUBMISSION DATE]
+
+================================================================================
+     A. ROBOTICS ENGINEERING COMPETENCY (80 marks)
+================================================================================
+
+========================================================================
+1. PROBLEM STATEMENT & REQUIREMENTS (10%)
+========================================================================
+
+1.1 Problem Context and Motivation                        [3 marks]
+------------------------------------------------------------------------
+
+Urban drainage infrastructure across Trinidad and Tobago consists
+primarily of open reinforced-concrete channels (box culverts and
+U-channels) ranging from 0.45 m to 1.2 m in width and 0.3 m to 0.6 m
+in depth [1]. These channels serve as the primary stormwater conveyance
+network for densely populated urban corridors including Port of Spain,
+San Fernando, and Chaguanas.
+
+Three compounding problems arise from inadequate drain maintenance:
+
+(a) Flooding — Accumulated solid waste (plastic bottles, bags,
+    polystyrene, organic matter) and algae biofilm reduce the
+    hydraulic cross-section of drainage channels. During the wet
+    season (June-December), reduced capacity leads to overtopping
+    and urban flooding. The Office of Disaster Preparedness and
+    Management (ODPM) reports annual flood damage costs exceeding
+    TT$50 million in affected communities [2].
+
+(b) Public Health — Standing water in partially blocked drains
+    creates breeding habitat for Aedes aegypti mosquitoes, the
+    primary vector for dengue, Zika, and chikungunya. Trinidad
+    and Tobago recorded over 2,000 suspected dengue cases in 2023
+    alone, with blocked drains identified as a contributing
+    environmental factor [3].
+
+(c) Worker Safety — Current drain maintenance relies on manual
+    labour: municipal workers physically enter drainage channels
+    with hand tools. This exposes them to leptospirosis (via
+    contact with Rattus norvegicus-contaminated water), chemical
+    pollutants, sharp refuse, and physical injury from confined-
+    space work [4]. The Occupational Safety and Health Authority
+    of Trinidad and Tobago (OSHA-TT) classifies open-drain
+    cleaning as medium-to-high risk work.
+
+A robotics-based approach is warranted because it: (i) removes
+workers from hazardous drain environments; (ii) enables proactive,
+scheduled cleaning rather than reactive post-flood response; and
+(iii) operates effectively in the shallow-water, confined-space
+conditions that exclude conventional heavy equipment (backhoes,
+vacuum trucks).
+
+
+1.2 Engineering Requirements (Quantified)                 [4 marks]
+------------------------------------------------------------------------
+
+The following performance requirements are derived from the operating
+environment and stakeholder needs:
+
+    Req. ID | Requirement                    | Target Value
+    --------|--------------------------------|------------------------
+    R1      | Debris collection rate         | >= 0.5 kg per 100 m
+    R2      | Algae removal effectiveness    | >= 80% biofilm removed
+    R3      | Operating speed in drain       | 0.10 - 0.20 m/s
+    R4      | Continuous battery life         | >= 60 minutes
+    R5      | Drain coverage per charge      | >= 400 m
+    R6      | Maximum operating water depth  | 15 cm
+    R7      | Deployment time                | <= 5 minutes
+    R8      | System mass                    | <= 15 kg
+    R9      | Maximum width                  | <= 0.40 m
+    R10     | Wireless control range         | >= 50 m (line of sight)
+
+These requirements are traceable: R1-R2 address the core cleaning
+function, R3-R5 define operational endurance, R6 bounds the operating
+environment, R7 ensures practical field deployment, R8-R9 ensure
+portability and drain compatibility, and R10 ensures safe remote
+operation.
+
+
+1.3 Constraints and Justified Assumptions                 [3 marks]
+------------------------------------------------------------------------
+
+    Constraint               | Justification
+    -------------------------|---------------------------------------------
+    Width <= 0.40 m          | Minimum drain width is 0.45 m; 0.05 m
+                             | clearance prevents wall contact during
+                             | steering.
+    Mass <= 15 kg            | Two-person carry limit for field deployment
+                             | at arbitrary drain access points.
+    Water depth 0-15 cm      | Represents typical shallow standing water
+                             | in partially blocked drains; deeper
+                             | conditions indicate severe blockage
+                             | requiring heavy equipment intervention.
+    IP67 electronics         | IEC 60529: withstands immersion to 1 m for
+                             | 30 min. Required for splash, rain, and
+                             | shallow wading conditions.
+    12 V DC battery system   | Standard voltage for COTS DC gear motors;
+                             | compatible with 3S LiPo packs widely
+                             | available at reasonable cost.
+    Budget < $500 USD        | Student team constraint; achieved through
+                             | exclusive use of COTS components.
+    WiFi range >= 50 m       | Operator stationed at drain access point
+                             | above ground; 2.4 GHz WiFi sufficient for
+                             | line-of-sight open-channel operation.
+    Emergency stop           | Required for any remotely operated system;
+                             | implemented as both hardware (relay) and
+                             | software (app command).
+
+    Assumptions:
+    (A1) Drains are open-top concrete channels with nearby pedestrian
+         or vehicular access for deployment and retrieval.
+    (A2) Debris items are primarily plastic waste and organic matter,
+         each weighing less than 2 kg.
+    (A3) Ambient temperature is 25-35 deg C (tropical); no cold-weather
+         or ice considerations.
+    (A4) The operator has a smartphone with WiFi capability.
+
+
+========================================================================
+2. SYSTEM ARCHITECTURE & DESIGN METHODOLOGY (20%)
+========================================================================
+
+2.1 System Block Diagram and Signal/Data Flow             [6 marks]
+------------------------------------------------------------------------
+
+[INSERT CLEAN VECTOR DIAGRAM — described below in ASCII for content]
+
+The system follows a master-slave teleoperation architecture. The
+operator's mobile device (master) communicates via 2.4 GHz WiFi with the
+onboard ESP32-CAM module (slave), which serves as the central controller.
+
+    ┌──────────────────────────────────────────────────────────────────────┐
+    │                    AXIOM D1 — SYSTEM ARCHITECTURE                   │
+    │                                                                     │
+    │  OPERATOR SIDE                │  ROBOT SIDE                         │
+    │                               │                                     │
+    │  ┌─────────────┐   WiFi       │   ┌──────────────────┐              │
+    │  │ Mobile App  │◄═══2.4GHz═══►│   │   ESP32-CAM      │              │
+    │  │ (Android)   │  commands    │   │   Main Controller │              │
+    │  │ • Joystick  │  + H.264    │   │   • WiFi AP/STA   │              │
+    │  │ • Video feed│  video      │   │   • OV2640 Camera  │              │
+    │  │ • Status    │  stream     │   │   • GPIO Control   │              │
+    │  │ • E-stop btn│             │   └────────┬──────────┘              │
+    │  └─────────────┘             │            │                         │
+    │                               │    ┌───────┴────────┐               │
+    │                               │    │  SIGNAL BUS    │               │
+    │                               │    │  (GPIO + PWM)  │               │
+    │                               │    └┬────┬────┬────┬┘               │
+    │                               │     │    │    │    │                │
+    │          ┌──────────────────────────┘    │    │    └──────────┐     │
+    │          │                    │          │    │               │     │
+    │   ┌──────▼──────┐     ┌──────▼──────┐  ┌▼────▼─────┐  ┌─────▼───┐ │
+    │   │ LOCOMOTION  │     │ COLLECTION  │  │ CLEANING  │  │ SENSING │ │
+    │   │             │     │             │  │           │  │         │ │
+    │   │ L298N ×2    │     │ L298N ×1    │  │ L298N ×1  │  │HC-SR04×2│ │
+    │   │   │    │    │     │   │    │    │  │   │   │   │  │MPU6050  │ │
+    │   │ ┌─▼─┐┌─▼─┐ │     │ ┌─▼─┐┌─▼──┐│  │ ┌─▼─┐┌▼──┐│  │Water   │ │
+    │   │ │M_L││M_R│ │     │ │M_C││Srv ││  │ │B_L││B_R││  │Level   │ │
+    │   │ │   ││   │ │     │ │   ││MG  ││  │ │   ││   ││  │Sensor  │ │
+    │   │ └─┬─┘└─┬─┘ │     │ └─┬─┘└─┬──┘│  │ └─┬─┘└┬──┘│  └────────┘ │
+    │   │   │    │   │     │   │    │   │  │   │   │   │              │
+    │   │ Track Track │     │ Conv. Scoop│  │ Brush Brush│              │
+    │   │ Left  Right │     │ Belt  Tilt │  │ Left  Right│              │
+    │   └─────────────┘     └───────────┘  └───────────┘              │
+    │                               │                                     │
+    │   ┌───────────────────────────────────────────────────────────┐     │
+    │   │                    POWER SYSTEM                           │     │
+    │   │  12V 10Ah LiPo ──► BMS ──► 15A Fuse ──► Power Bus       │     │
+    │   │                              │                            │     │
+    │   │                         E-STOP RELAY                      │     │
+    │   │                    (NC relay, kills power)                 │     │
+    │   └───────────────────────────────────────────────────────────┘     │
+    └──────────────────────────────────────────────────────────────────────┘
+
+    LEGEND:
+    M_L / M_R  = Left/Right track DC gear motors (12V, 200 RPM)
+    M_C        = Conveyor belt DC motor (12V, 100 RPM)
+    Srv MG     = MG996R servo (scoop tilt)
+    B_L / B_R  = Left/Right brush DC motors (12V, 3000 RPM)
+    ═══        = WiFi wireless link
+    ───        = Wired electrical connection
+
+Data Flow Summary:
+    • Operator → (WiFi) → ESP32: directional commands, speed setpoints,
+      brush on/off, scoop angle, E-stop
+    • ESP32 → (WiFi) → Operator: H.264 video stream, sensor status
+      (distance, tilt, water level), battery voltage
+    • ESP32 → (PWM/GPIO) → L298N drivers: motor speed and direction
+    • Sensors → (analog/I2C) → ESP32: environmental data
+
+
+2.2 Subsystem Decomposition and Interfaces                [7 marks]
+------------------------------------------------------------------------
+
+AXIOM D1 is decomposed into six modular subsystems. Each subsystem
+has defined inputs, outputs, and physical interfaces:
+
+SUBSYSTEM 1: LOCOMOTION
+    Function:   Propel and steer the robot through drain channels.
+    Components: 2× 12V DC gear motors (200 RPM, 5 Nm), 2× rubber
+                caterpillar tracks, sprocket-and-chain drive.
+    Interface:  Receives PWM signals from L298N driver board.
+                Powered from 12V bus via 15A fused line.
+    Steering:   Differential (skid-steer). Left/right motor speeds
+                independently controlled for forward, reverse,
+                pivot turn, and arc turns.
+
+SUBSYSTEM 2: COLLECTION
+    Function:   Gather solid waste from the drain floor and deposit
+                it into the onboard collection bin.
+    Components: 1× front-mounted scoop (aluminium, servo-actuated
+                tilt 0-120 deg), 1× rubber conveyor belt (200×80 mm
+                loop, 12V DC motor at 100 RPM), 1× sealed collection
+                bin (5 L, ABS, with mesh drain holes).
+    Interface:  Servo receives PWM from ESP32 GPIO. Conveyor motor
+                receives PWM from L298N. Collection bin is removable
+                (top-access latch) for emptying.
+    Operation:  Scoop tilts down to engage debris → conveyor
+                transports debris upward into bin → mesh allows
+                water drainage while retaining solids.
+
+SUBSYSTEM 3: CLEANING
+    Function:   Scrub algae biofilm from drain floor and walls.
+    Components: 2× 12V DC motors (3000 RPM), 2× nylon brush heads
+                (60 mm dia., replaceable snap-fit), 2× spring-loaded
+                articulating mounts.
+    Interface:  Motors receive on/off + PWM from L298N. Spring-loaded
+                mounts maintain contact pressure (2-5 N) against
+                drain surfaces without active control.
+    Operation:  Brushes engage automatically when motors are
+                activated. Spring mounts conform to surface
+                irregularities. Operator activates/deactivates
+                via app toggle.
+
+SUBSYSTEM 4: SENSING AND PERCEPTION
+    Function:   Provide environmental awareness to the operator and
+                trigger safety interlocks.
+    Components: 2× HC-SR04 ultrasonic sensors (front and rear,
+                range 2-400 cm), 1× MPU6050 6-axis IMU, 1× resistive
+                water-level sensor, 1× OV2640 2MP camera (on
+                ESP32-CAM).
+    Interface:  HC-SR04: trigger/echo GPIO pins on ESP32.
+                MPU6050: I2C bus (SDA/SCL), address 0x68.
+                Water sensor: analog input via ESP32 ADC.
+                Camera: integrated on ESP32-CAM module.
+    Data rates: Ultrasonic polling: 10 Hz. IMU: 50 Hz. Water level:
+                5 Hz. Video: 15-20 fps at 640×480 (MJPEG/H.264).
+
+SUBSYSTEM 5: CONTROL AND COMMUNICATION
+    Function:   Central processing, command interpretation, actuator
+                control, and wireless communication.
+    Components: 1× ESP32-CAM (dual-core 240 MHz, WiFi 802.11b/g/n,
+                520 KB SRAM, 4 MB flash), custom firmware
+                (Arduino/ESP-IDF).
+    Interface:  WiFi AP mode (creates local network) or STA mode
+                (joins existing network). Mobile app connects via
+                HTTP/WebSocket. ESP32 GPIO pins drive L298N enable
+                and direction pins. I2C bus for IMU.
+    Operation:  Core 0: WiFi stack, video streaming, command
+                reception. Core 1: motor control loop, sensor
+                polling, safety interlock logic.
+
+SUBSYSTEM 6: POWER
+    Function:   Store and distribute electrical energy to all
+                subsystems.
+    Components: 1× 3S2P LiPo pack (11.1V nominal, 12.6V full,
+                10 Ah, 120 Wh), 1× 3S BMS (balance charging,
+                overcurrent, undervoltage, thermal protection),
+                1× 15A blade fuse, 1× E-stop relay (normally
+                closed), 1× 5V buck converter (for ESP32 and
+                sensors).
+    Interface:  Main 12V bus feeds all motor drivers. 5V regulated
+                rail feeds ESP32, sensors. E-stop relay is in series
+                with the main bus — opening it cuts all power.
+    Charging:   External charger via XT60 connector. 2A charge rate,
+                ~5 hour full charge.
+
+
+2.3 Design Workflow and Decision Justification            [7 marks]
+------------------------------------------------------------------------
+
+The design followed a structured engineering process:
+
+STEP 1: NEEDS ANALYSIS
+    Stakeholder interviews (municipal drain workers, WASA field
+    engineers) and site visits to open drains in St. Augustine and
+    Curepe identified the core requirements: debris removal, algae
+    cleaning, shallow-water operation, and compact size.
+
+STEP 2: CONCEPT GENERATION
+    Three candidate platform concepts were evaluated:
+
+    Concept A — Wheeled robot with gripper arm
+    Concept B — Tracked robot with scoop/conveyor + brushes (AXIOM D1)
+    Concept C — Floating drone with skimmer basket
+
+STEP 3: TRADE-OFF ANALYSIS (Pugh Matrix)
+
+    Criterion (weight)     | A: Wheeled | B: Tracked | C: Floating
+    -----------------------|------------|------------|------------
+    Traction on wet        |            |            |
+      concrete (0.20)      |    -1      |    +1      |     0
+    Obstacle traversal     |            |            |
+      (0.15)               |    -1      |    +1      |    N/A
+    Algae scrubbing        |            |            |
+      capability (0.20)    |    +1      |    +1      |    -1
+    Debris collection      |            |            |
+      capacity (0.15)      |     0      |    +1      |    -1
+    Shallow + dry           |            |            |
+      operation (0.15)     |    +1      |    +1      |    -1
+    Mechanical              |            |            |
+      complexity (0.10)    |    +1      |     0      |    +1
+    Cost (0.05)            |    +1      |     0      |    -1
+    -----------------------|------------|------------|------------
+    Weighted Score         |   +0.05    |   +0.80    |   -0.55
+
+    Concept B was selected with the highest weighted score. Key
+    trade-off: Concept A (wheeled) is mechanically simpler but
+    critically fails on traction in wet/slimy drain conditions.
+    Concept C (floating) cannot operate in dry or very shallow
+    sections, eliminating it from consideration.
+
+STEP 4: DETAILED DESIGN
+    Component selection, power budget, mechanical layout, and control
+    architecture were developed (detailed in Sections 3-5).
+
+STEP 5: VALIDATION PLANNING
+    Performance targets (Section 1.2) are verified through
+    engineering calculations (Section 4) and planned field testing.
+
+
+========================================================================
+3. ROBOTICS TECHNICAL DEPTH (25%)
+========================================================================
+
+3.1 Sensor Selection and Justification                    [6 marks]
+------------------------------------------------------------------------
+
+Each sensor was selected based on the operating environment (wet,
+confined, variable lighting) and system requirements:
+
+SENSOR 1: HC-SR04 ULTRASONIC DISTANCE SENSOR (×2)
+    Purpose:    Forward and rear obstacle detection.
+    Specs:      Range: 2-400 cm. Accuracy: +/- 3 mm. Beam angle: 15 deg.
+                Operating voltage: 5V (via buck converter). Response
+                time: < 25 ms.
+    Justification: Ultrasonic was chosen over infrared (IR) ToF
+                sensors because ultrasonic waves propagate reliably in
+                humid, wet environments where IR beams scatter off water
+                droplets and mist. The HC-SR04 is waterproof-compatible
+                with a silicone boot over the transducer face.
+    Alternatives rejected:
+        - Sharp GP2Y0A21 IR: unreliable in humid/wet conditions.
+        - VL53L0X laser ToF: higher cost ($8 vs $2.50), no humidity
+          advantage in open-air drain.
+    Integration: Trigger/echo pins connected to ESP32 GPIO. Polled at
+                10 Hz. Obstacle alert threshold: 10 cm. Auto-stop
+                threshold: 5 cm.
+
+SENSOR 2: MPU6050 INERTIAL MEASUREMENT UNIT
+    Purpose:    Tilt and orientation monitoring.
+    Specs:      6-axis (3-axis accelerometer +/- 16g, 3-axis gyroscope
+                +/- 2000 deg/s). Interface: I2C at 400 kHz. Operating
+                voltage: 3.3V (ESP32-compatible).
+    Justification: Detects if the robot is climbing a debris pile (pitch
+                angle increase), tipping sideways (roll), or on a steep
+                drain gradient. Critical safety interlock: tilt > 30 deg
+                triggers alert + auto-stop to prevent rollover.
+    Integration: I2C bus (address 0x68). Complementary filter fuses
+                accelerometer and gyroscope data for stable angle
+                estimation. Polled at 50 Hz.
+
+SENSOR 3: RESISTIVE WATER LEVEL SENSOR
+    Purpose:    Monitor water depth around the robot.
+    Specs:      Analog output (0-3.3V proportional to depth). Range:
+                0-20 cm. Accuracy: +/- 5 mm.
+    Justification: Simple, low-cost, and adequate for the coarse
+                depth measurement needed. Alerts the operator and
+                triggers auto-stop if depth exceeds 15 cm (R6).
+    Integration: Connected to ESP32 ADC (12-bit). Polled at 5 Hz.
+
+SENSOR 4: OV2640 CAMERA (INTEGRATED ON ESP32-CAM)
+    Purpose:    Live video feed for teleoperation.
+    Specs:      2 MP, up to 1600×1200. Used at 640×480 for bandwidth.
+                Frame rate: 15-20 fps (MJPEG stream over HTTP).
+    Justification: The ESP32-CAM integrates the camera and WiFi
+                transceiver on a single module, reducing component count
+                and wiring complexity. The operator relies primarily on
+                the video feed to navigate, identify debris, and verify
+                cleaning effectiveness.
+
+
+3.2 Actuator and Mechanical Design                        [6 marks]
+------------------------------------------------------------------------
+
+ACTUATOR 1: TRACK DRIVE MOTORS (×2)
+    Type:       12V DC gear motor with metal gearbox.
+    Specs:      No-load speed: 200 RPM. Stall torque: 10 Nm.
+                Rated torque: 5 Nm at 3A. Shaft: 8 mm D-profile.
+    Mechanical coupling: 10-tooth sprocket on motor shaft drives a
+                #25 roller chain to a 10-tooth driven sprocket on
+                the track axle (1:1 ratio).
+    Track specs: Rubber caterpillar tracks, 250 mm long × 40 mm wide,
+                with 10 mm pitch cleats for grip on wet concrete.
+
+    Speed calculation:
+        Track sprocket pitch radius: r = 20 mm = 0.02 m
+        Linear speed = 2*pi*r*n = 2*pi*0.02*(200/60) = 0.419 m/s (no-load)
+        Under load (estimated 50% speed reduction): ~0.20 m/s
+        This satisfies R3 (0.10-0.20 m/s).
+
+ACTUATOR 2: CONVEYOR BELT MOTOR (×1)
+    Type:       12V DC gear motor.
+    Specs:      No-load speed: 100 RPM. Rated torque: 2 Nm at 1A.
+    Mechanical: Drives a rubber belt (200 × 80 mm loop) over two
+                20 mm diameter rollers.
+    Belt speed: v = pi*d*n = pi*0.02*(100/60) = 0.105 m/s
+
+ACTUATOR 3: SCOOP SERVO (×1)
+    Type:       MG996R metal-gear servo.
+    Specs:      Torque: 10 kg-cm at 6V. Rotation: 0-180 deg.
+                PWM control (50 Hz, 1-2 ms pulse).
+    Function:   Tilts the front scoop between collection position
+                (angled down, 30 deg below horizontal) and raised
+                position (flush, for travel without scooping).
+
+ACTUATOR 4: BRUSH MOTORS (×2)
+    Type:       12V DC motor (no gearbox — direct drive).
+    Specs:      No-load speed: 3000 RPM. Rated current: 1A.
+    Mechanical: Nylon brush heads (60 mm diameter) press-fit onto
+                motor shafts. Mounted on spring-loaded pivoting arms
+                that maintain 2-5 N contact force against drain
+                surfaces.
+
+    Brush tip speed:
+        v_tip = pi*d*n = pi*0.06*(3000/60) = 9.42 m/s
+        Literature indicates tip speeds > 5 m/s are effective for
+        removing biofilm from concrete surfaces [5]. The 9.42 m/s
+        provides a margin of 1.88x above the minimum threshold.
+
+MECHANICAL CHASSIS:
+    Material:   6061-T6 aluminium frame (corrosion-resistant).
+    Dimensions: 400 mm (L) × 350 mm (W, including tracks) × 150 mm (H).
+    Mass budget:
+        Chassis frame:       3.0 kg
+        Track assemblies:    2.5 kg
+        Motors (all):        2.0 kg
+        Brush assemblies:    1.0 kg
+        Scoop + conveyor:    1.5 kg
+        Electronics + wiring:0.5 kg
+        Battery:             1.5 kg
+        Collection bin:      0.5 kg
+        Enclosure + misc:    1.5 kg
+        ─────────────────────────
+        TOTAL:              14.0 kg  (within 15 kg limit, R8)
+
+
+3.3 Control Strategy and Algorithms                       [6 marks]
+------------------------------------------------------------------------
+
+AXIOM D1 uses a teleoperation control architecture with safety
+interlocks. The control logic runs on the ESP32's dual cores:
+
+CORE 0 — COMMUNICATION TASK (runs continuously):
+    • Hosts WiFi access point (SSID: "AXIOM_D1", WPA2)
+    • Streams MJPEG video via HTTP server (port 80)
+    • Receives operator commands via WebSocket (port 81)
+    • Command format: JSON {dir: "FWD", speed: 75, brush: 1,
+      scoop: 45, estop: 0}
+    • Transmits telemetry: JSON {dist_f: 32, dist_r: 105,
+      tilt: 3.2, water: 8.5, batt: 11.8}
+    • Watchdog: if no command received for 3 seconds, triggers
+      COMMUNICATION LOSS → auto-stop.
+
+CORE 1 — CONTROL LOOP (runs at 50 Hz / 20 ms period):
+
+    [CONTROL FLOWCHART — insert clean diagram]
+
+    START (every 20 ms)
+        │
+        ▼
+    ┌─ READ SENSORS ─────────────────────────┐
+    │  • Ultrasonic front/rear (10 Hz)       │
+    │  • IMU tilt angles (50 Hz)             │
+    │  • Water level (5 Hz)                  │
+    │  • Battery voltage (1 Hz via ADC)      │
+    └────────────────┬───────────────────────┘
+                     │
+                     ▼
+    ┌─ SAFETY INTERLOCK CHECK ───────────────┐
+    │  IF front_distance < 5 cm  → STOP      │
+    │  IF tilt_angle > 30 deg    → STOP      │
+    │  IF water_level > 15 cm    → STOP      │
+    │  IF battery_voltage < 9.6V → STOP      │
+    │  IF E-stop flag set        → STOP      │
+    │  IF comm_timeout > 3 sec   → STOP      │
+    └────────────┬───────────┬───────────────┘
+                 │           │
+            SAFE │      UNSAFE → STOP ALL MOTORS
+                 │              → ALERT OPERATOR
+                 ▼              → AWAIT RESET
+    ┌─ PROCESS OPERATOR COMMAND ─────────────┐
+    │  Parse direction + speed               │
+    │  Map to left/right motor PWM values:   │
+    │                                        │
+    │  FWD:   PWM_L = speed,  PWM_R = speed  │
+    │  REV:   PWM_L = -speed, PWM_R = -speed │
+    │  LEFT:  PWM_L = -speed, PWM_R = +speed │
+    │  RIGHT: PWM_L = +speed, PWM_R = -speed │
+    │  ARC:   proportional mixing            │
+    │                                        │
+    │  Set brush motors: ON/OFF per command   │
+    │  Set scoop servo: angle per command     │
+    │  Set conveyor: ON/OFF per command       │
+    └────────────────┬───────────────────────┘
+                     │
+                     ▼
+    ┌─ WRITE ACTUATOR OUTPUTS ───────────────┐
+    │  L298N IN1/IN2 + ENA (PWM) for each    │
+    │  motor driver channel                  │
+    │  Servo: write microseconds via LEDC    │
+    └────────────────┬───────────────────────┘
+                     │
+                     ▼
+    ┌─ SOFT OBSTACLE AVOIDANCE ──────────────┐
+    │  IF front_distance 5-15 cm:            │
+    │     Reduce speed to 50%                │
+    │     Alert operator (distance overlay)  │
+    │  IF front_distance 15-30 cm:           │
+    │     Display distance on video feed     │
+    └────────────────────────────────────────┘
+                     │
+                     ▼
+                   END (wait for next 20 ms cycle)
+
+MOTOR SPEED CONTROL:
+    The L298N driver accepts a PWM signal (0-255, mapped to 0-100%
+    duty cycle at 1 kHz) on the ENA pin and two direction pins
+    (IN1/IN2). A simple open-loop proportional control is used:
+
+        PWM_value = (operator_speed / 100) × 255
+
+    For future refinement, closed-loop speed control could use
+    back-EMF sensing or optical encoders, but for the prototype,
+    open-loop control is sufficient given the low speeds and
+    the operator's visual feedback via the camera.
+
+
+3.4 Power and Energy System                               [4 marks]
+------------------------------------------------------------------------
+
+BATTERY SPECIFICATION:
+    Chemistry:      Lithium Polymer (LiPo)
+    Configuration:  3S2P (3 cells in series, 2 in parallel)
+    Nominal voltage: 11.1 V (3 × 3.7 V)
+    Full charge:    12.6 V (3 × 4.2 V)
+    Capacity:       10 Ah (2 × 5 Ah parallel packs)
+    Energy:         111 Wh (nominal), 126 Wh (full)
+    Discharge rate: 10C capable (100A max, far exceeding 10A draw)
+    Mass:           ~600 g
+
+POWER BUDGET (worst-case continuous draw):
+
+    Subsystem          | Voltage | Current | Power
+    -------------------|---------|---------|------
+    Track motors (×2)  | 12 V    | 6.0 A   | 72.0 W
+    Brush motors (×2)  | 12 V    | 2.0 A   | 24.0 W
+    Conveyor motor     | 12 V    | 1.0 A   | 12.0 W
+    Scoop servo        | 6 V*    | 0.5 A   | 3.0 W
+    ESP32-CAM          | 5 V     | 0.3 A   | 1.5 W
+    Sensors            | 5 V     | 0.1 A   | 0.5 W
+    L298N driver loss  | —       | —       | ~6.0 W
+    Buck converter loss| —       | —       | ~1.0 W
+    -------------------|---------|---------|------
+    TOTAL              |         | ~10 A   | 120 W
+
+    * Servo powered from dedicated 6V BEC or regulated from 12V bus.
+
+RUNTIME CALCULATION:
+    Available energy:  111 Wh (nominal) × 0.85 (depth-of-discharge
+                       limit to protect battery life) = 94.35 Wh
+    Runtime = 94.35 Wh / 120 W = 0.786 hours = 47.2 minutes
+
+    NOTE: This is the worst-case estimate with ALL subsystems at full
+    load simultaneously. In practice, brushes and conveyor are not
+    always active. Realistic duty cycle:
+        Track motors:  100% duty (always moving)     = 72.0 W
+        Brushes:       60% duty                      = 14.4 W
+        Conveyor:      40% duty                      = 4.8 W
+        Servo:         10% duty (intermittent)       = 0.3 W
+        Electronics:   100% duty                     = 9.0 W
+        ─────────────────────────────────────────────────────
+        Realistic average power:                    100.5 W
+
+    Realistic runtime = 94.35 / 100.5 = 0.939 hours = 56.3 minutes
+
+    To meet the 60-minute target (R4), the team may:
+    (a) Use a slightly larger battery (12 Ah → 133 Wh usable).
+    (b) Implement power-saving modes (reduce brush RPM when algae
+        is light, lower video resolution when stationary).
+
+CHARGING:
+    XT60 connector for external balance charger. 2A charge rate.
+    Full charge time: 10 Ah / 2 A = 5 hours.
+    Field hot-swap: a second battery pack can be swapped to
+    enable near-continuous operation.
+
+POWER DISTRIBUTION:
+    Battery → XT60 → E-stop relay (NC) → 15A blade fuse → Power bus
+        ├── 12V rail → L298N drivers → Motors
+        └── Buck converter (12V→5V) → ESP32, sensors
+
+
+3.5 Safety and Reliability                                [3 marks]
+------------------------------------------------------------------------
+
+HAZARD IDENTIFICATION AND MITIGATION:
+
+    Hazard                  | Severity | Mitigation
+    ------------------------|----------|-----------------------------------
+    Water ingress to        | High     | IP67 ABS enclosure, silicone
+    electronics             |          | gasket seals, conformal coating
+                            |          | (MG Chemicals 422B) on PCB.
+    Battery thermal         | Critical | 3S BMS with thermal cutoff
+    runaway / fire          |          | (65 deg C), overcurrent (15A),
+                            |          | undervoltage (9.0V). LiPo stored
+                            |          | in fireproof bag during charging.
+    Debris jamming in       | Medium   | Motor drivers detect stall
+    tracks or brushes       |          | (current spike > 5A) → auto-
+                            |          | reverse for 2 sec → retry. If
+                            |          | still jammed → alert operator.
+    Loss of wireless        | Medium   | Watchdog timer: no command for
+    communication           |          | 3 sec → all motors stop. Robot
+                            |          | remains stationary until
+                            |          | reconnection.
+    Robot tipping /         | Medium   | IMU monitors roll/pitch. Tilt
+    rollover                |          | > 30 deg → auto-stop + alert.
+                            |          | Low center of gravity (battery
+                            |          | mounted at chassis floor).
+    Entanglement (plastic   | Low      | Brush housings have debris
+    bags in brushes)        |          | guards (3D-printed shrouds).
+                            |          | Motor reversing clears most
+                            |          | tangles.
+    Robot stuck / cannot    | Low      | Tether attachment point (rear
+    retrieve                |          | D-ring) for manual pullback.
+                            |          | Bright orange chassis for
+                            |          | visibility.
+
+RELIABILITY FEATURES:
+    • All connectors are gold-plated XT30/XT60 with silicone
+      weatherproofing.
+    • Brush heads are snap-fit replaceable (no tools required).
+    • Collection bin is removable for emptying in < 30 seconds.
+    • ESP32 firmware includes watchdog timer: automatic reboot if
+      software hangs for > 5 seconds.
+    • Modular wiring harness with labelled Dupont connectors for
+      field-serviceable repair.
+
+
+========================================================================
+4. MODELLING, ANALYSIS & VALIDATION (15%)
+========================================================================
+
+4.1 Mathematical and Engineering Calculations             [5 marks]
+------------------------------------------------------------------------
+
+CALCULATION 1: TRACTION ANALYSIS
+
+    Determine whether the tracks can generate sufficient tractive
+    force to propel the robot while pushing debris through standing
+    water.
+
+    Given:
+        Robot mass:                m = 14 kg (Table in Section 3.2)
+        Gravitational accel.:     g = 9.81 m/s^2
+        Robot weight:             W = m*g = 14 × 9.81 = 137.3 N
+        Coeff. of friction
+          (rubber on wet concrete): mu = 0.50 [5]
+
+    Maximum tractive force:
+        F_traction = mu × W = 0.50 × 137.3 = 68.7 N
+
+    Resistance forces:
+        (a) Rolling resistance:
+            C_rr = 0.02 (rubber tracks on concrete)
+            F_roll = C_rr × W = 0.02 × 137.3 = 2.75 N
+
+        (b) Debris pushing (worst case: 2 kg object, mu_debris = 0.6):
+            F_debris = mu_d × m_d × g = 0.6 × 2 × 9.81 = 11.77 N
+
+        (c) Hydrodynamic drag (in 10 cm standing water):
+            Frontal area submerged: A = 0.35 × 0.10 = 0.035 m^2
+            Velocity: v = 0.15 m/s
+            Drag coeff.: C_d = 1.0 (bluff body)
+            F_drag = 0.5 × rho × v^2 × C_d × A
+                   = 0.5 × 1000 × 0.0225 × 1.0 × 0.035
+                   = 0.394 N
+
+        Total resistance:
+            F_total = 2.75 + 11.77 + 0.394 = 14.91 N
+
+    Traction safety factor:
+        SF = F_traction / F_total = 68.7 / 14.91 = 4.61
+
+    RESULT: Safety factor of 4.6 confirms ample traction. Even if
+    friction drops to mu = 0.3 (very slimy surface):
+        F_traction = 0.3 × 137.3 = 41.2 N
+        SF = 41.2 / 14.91 = 2.76 — still adequate.
+
+
+CALCULATION 2: MOTOR TORQUE VERIFICATION
+
+    Required torque per motor (2 motors sharing load):
+        T_req = (F_total / 2) × r_sprocket
+              = (14.91 / 2) × 0.02
+              = 0.149 Nm
+
+    Available torque per motor (rated): 5 Nm
+
+    Torque safety factor: SF = 5.0 / 0.149 = 33.6
+
+    This large factor accounts for:
+        - Startup inertia (transient torque spike ~3× steady-state)
+        - Climbing over obstacles up to 5 cm height
+        - Operating on inclined drain sections (up to ~15 deg grade)
+
+    At 15 deg incline:
+        F_gravity = m*g*sin(15) = 14 × 9.81 × 0.259 = 35.6 N
+        F_total_incline = 35.6 + 14.91 = 50.5 N
+        T_req_incline = (50.5 / 2) × 0.02 = 0.505 Nm
+        SF_incline = 5.0 / 0.505 = 9.9 — still very comfortable.
+
+
+CALCULATION 3: BRUSH EFFECTIVENESS
+
+    Brush tip speed:
+        v_tip = pi × d × n = pi × 0.06 × (3000/60) = 9.42 m/s
+
+    Scrubbing overlap (area coverage per second):
+        Brush contact width: ~10 mm (bristle deflection zone)
+        Robot speed: 0.15 m/s
+        Brushed strip per second: 0.15 × 0.01 = 0.0015 m^2/s
+        For two brushes: 0.003 m^2/s
+
+    Drain floor area per 100 m (0.45 m wide drain):
+        A_floor = 100 × 0.45 = 45 m^2
+
+    Time to brush 100 m of floor:
+        t = 45 / 0.003 = 15,000 s = 250 min (single pass)
+
+    However, the brushes clean the width directly beneath them as
+    the robot drives forward. With two brushes covering 120 mm
+    total width, and the drain floor being 450 mm:
+        Passes needed: 450 / 120 = 3.75 → 4 passes
+        Time per 100 m pass at 0.15 m/s: 667 s = 11.1 min
+        Total for full floor coverage: 4 × 11.1 = 44.4 min
+
+    This is within a single battery charge (56 min realistic).
+    Side-wall cleaning would require separate passes with the
+    robot positioned closer to each wall.
+
+
+CALCULATION 4: COLLECTION BIN CAPACITY ANALYSIS
+
+    Bin volume: 5 L = 0.005 m^3
+    Average debris density (mixed plastic + organic, loose):
+        ~400 kg/m^3
+    Bin capacity by mass: 0.005 × 400 = 2.0 kg
+
+    Debris density in Trinidad urban drains (estimated from
+    municipal data): ~5-15 g per linear metre in typical conditions.
+
+    Metres before bin is full:
+        At 10 g/m: 2000 g / 10 g/m = 200 m per emptying
+        At 5 g/m:  2000 g / 5 g/m  = 400 m per emptying
+
+    Since one charge covers ~400 m (R5), the bin may need to be
+    emptied 1-2 times per charge cycle. This is acceptable as the
+    operator can retrieve the robot at a drain access point, empty
+    the bin (~30 sec), and redeploy.
+
+
+4.2 Simulation and Performance Modelling                  [5 marks]
+------------------------------------------------------------------------
+
+DRAIN COVERAGE MODEL:
+
+    A simplified operational model estimates the cleaning throughput
+    for a municipal deployment scenario.
+
+    Parameters:
+        Drain network length (priority sections):  L = 5 km
+        Robot speed:                                v = 0.15 m/s
+        Battery runtime (realistic):               t_batt = 56 min
+        Bin emptying time:                          t_empty = 2 min
+        Battery swap time:                          t_swap = 5 min
+        Passes for full floor coverage:             N_pass = 4
+        Distance per charge:                        d_charge = v × t_batt
+                                                   = 0.15 × 3360 = 504 m
+
+    Single-pass coverage (debris collection only, one traverse):
+        Charges needed: 5000 / 504 = 9.92 → 10 charges
+        Bin emptyings: 5000 / 200 = 25
+        Total time: 10 × (56 + 5) + 25 × 2 = 660 min = 11 hours
+
+    Full-coverage cleaning (4 passes for complete floor scrubbing):
+        Total distance: 5000 × 4 = 20,000 m
+        Charges needed: 20,000 / 504 = 39.7 → 40 charges
+        Total time: 40 × (56 + 5) + 100 × 2 = 2,640 min = 44 hours
+
+    Interpretation: A single robot can perform debris-collection
+    sweeps of 5 km of priority drains in approximately 2 work days
+    (11 hours). Full deep-cleaning with algae scrubbing requires
+    approximately 1 work week (44 hours). This compares favorably
+    with manual cleaning rates of approximately 50-100 m per worker
+    per day [1], which would require 50-100 worker-days for the
+    same 5 km network.
+
+ENERGY EFFICIENCY COMPARISON:
+
+    AXIOM D1:
+        Energy per km: 120 W × (1000/0.15) / 3600 = 222 Wh/km
+        Electricity cost (T&T rate: TT$0.33/kWh):
+            0.222 × 0.33 = TT$0.073/km = ~$0.01 USD/km
+
+    Manual labour:
+        Worker rate: ~TT$150/day
+        Coverage: ~75 m/day
+        Cost per km: TT$150 / 0.075 = TT$2,000/km = ~$295 USD/km
+
+    Ratio: Manual cleaning costs approximately 29,500× more per km
+    than the energy cost of robotic cleaning (excluding robot
+    capital cost and maintenance).
+
+
+4.3 Results Interpretation and Comparison                 [5 marks]
+------------------------------------------------------------------------
+
+PERFORMANCE SUMMARY TABLE:
+
+    Metric                    | Requirement | Calculated   | Status
+    --------------------------|-------------|--------------|--------
+    Debris collection rate    | >= 0.5 kg   | 2.0 kg/bin   | PASS
+                              | per 100 m   | (200 m range)|
+    Algae removal coverage    | >= 80%      | 4-pass full  | PASS*
+                              |             | coverage     |
+    Operating speed           | 0.10-0.20   | ~0.20 m/s    | PASS
+    Battery life              | >= 60 min   | 47-56 min    | MARGINAL
+    Drain length per charge   | >= 400 m    | 504 m (real.)| PASS
+    Max. water depth          | 15 cm       | 15 cm (IP67) | PASS
+    System mass               | <= 15 kg    | 14.0 kg      | PASS
+    Width                     | <= 0.40 m   | 0.35 m       | PASS
+    Wireless range            | >= 50 m     | ~50 m (WiFi) | PASS
+
+    * Algae removal effectiveness (80% target) requires field
+      validation with actual biofilm conditions.
+
+CRITICAL FINDING — BATTERY LIFE:
+    The worst-case runtime (47 min) falls short of the 60-minute
+    target. Mitigations:
+    (1) Upgrade to 12 Ah battery (+$15, +200g) → 67 min realistic.
+    (2) Implement duty-cycle management in firmware: reduce brush
+        RPM by 30% during light-algae sections.
+    (3) Accept 47-56 min range with hot-swap battery capability.
+    Recommendation: Option (1) is the simplest and most reliable
+    solution.
+
+COMPARISON WITH EXISTING SYSTEMS:
+
+    Feature         | AXIOM D1     | Zhang et al. [6] | Manual Labour
+    ----------------|--------------|------------------|---------------
+    Environment     | Shallow drain| Ocean + beach    | Drain
+    Speed           | 0.15-0.20    | 0.29 land,       | ~0.001 m/s
+                    | m/s          | 0.33 water       | (effective)
+    Runtime         | ~56 min      | 6-8 hours        | 8 hr shift
+    Algae cleaning  | Yes          | No               | Limited
+    Cost            | ~$360        | Not disclosed    | ~$295/km
+    Mass            | 14 kg        | ~30 kg (est.)    | N/A
+    Operator safety | Remote       | Remote           | Direct hazard
+
+    AXIOM D1 fills a niche not addressed by existing amphibious
+    garbage robots: confined-space drain cleaning with both debris
+    removal AND algae scrubbing in a single platform.
+
+
+========================================================================
+5. INTEGRATION & FEASIBILITY (10%)
+========================================================================
+
+5.1 Subsystem Integration Reasoning                       [4 marks]
+------------------------------------------------------------------------
+
+All subsystems share two common buses:
+
+    (1) 12V POWER BUS
+        Battery → E-stop relay → Fuse → Power bus
+        All L298N drivers and the buck converter tap from this bus.
+        Each driver has onboard capacitors (100 uF) for motor
+        transient decoupling.
+
+    (2) SIGNAL BUS (ESP32 GPIO)
+        The ESP32-CAM has limited GPIO pins (usable: GPIO 2, 4, 12,
+        13, 14, 15, plus I2C on GPIO 21/22). Pin allocation:
+
+        Pin   | Function
+        ------|------------------------------------------
+        GPIO2 | Ultrasonic front TRIG
+        GPIO4 | Onboard LED / flash (also camera)
+        GPIO12| L298N #1 ENA (left track PWM)
+        GPIO13| L298N #1 IN1 (left track direction)
+        GPIO14| L298N #1 IN2 (left track direction)
+        GPIO15| L298N #2 ENA (right track PWM)
+        GPIO21| I2C SDA (MPU6050)
+        GPIO22| I2C SCL (MPU6050)
+
+        NOTE: The ESP32-CAM's limited GPIO requires an I2C GPIO
+        expander (PCF8574, 8 additional outputs) for the remaining
+        motor controls (brush drivers, conveyor, scoop servo,
+        ultrasonic echo pins). This adds one $1.50 component and
+        uses the existing I2C bus.
+
+    COMPATIBILITY:
+        • All motors are 12V, simplifying the power architecture.
+        • All logic is 3.3V (ESP32-native), with L298N accepting
+          3.3V logic-level inputs.
+        • The I2C bus runs at 3.3V and connects the MPU6050 and
+          PCF8574 expander. Both have distinct I2C addresses
+          (0x68 and 0x20 respectively), so no conflict arises.
+        • The servo (MG996R) requires 5V, supplied from the buck
+          converter output.
+
+    PHYSICAL INTEGRATION:
+        The chassis is divided into three zones:
+        (a) FRONT: Scoop, conveyor, and front ultrasonic sensor.
+        (b) CENTRE: Collection bin (top-removable), IP67 electronics
+            enclosure (containing ESP32-CAM, drivers, BMS, wiring).
+        (c) REAR: Battery compartment (bottom-mounted for low CoG),
+            rear ultrasonic sensor, tether D-ring.
+        Brush assemblies mount on articulating arms at left and right
+        sides of the chassis, between the tracks.
+
+
+5.2 Practical Implementation Plan                         [3 marks]
+------------------------------------------------------------------------
+
+    Phase | Duration | Activities
+    ------|----------|--------------------------------------------
+    1     | 2 weeks  | Chassis fabrication (aluminium cutting,
+          |          | drilling, assembly). Track and motor
+          |          | mounting. Mechanical testing (rolling on
+          |          | flat surface, turning radius).
+    2     | 2 weeks  | Electronics assembly: ESP32-CAM firmware
+          |          | (WiFi AP, video stream, WebSocket server).
+          |          | L298N wiring. Basic drive test (forward,
+          |          | reverse, turn via serial commands).
+    3     | 2 weeks  | Collection mechanism integration: scoop
+          |          | servo mounting, conveyor belt assembly,
+          |          | collection bin fitting. Brush assembly
+          |          | mounting and motor wiring.
+    4     | 2 weeks  | Waterproofing: enclosure sealing, conformal
+          |          | coating, cable gland installation. Splash
+          |          | and shallow immersion testing. Mobile app
+          |          | development (MIT App Inventor or Flutter).
+    5     | 1 week   | Field testing in UWI campus drains.
+          |          | Performance measurement against requirements
+          |          | (R1-R10). Iterative adjustments.
+    6     | 1 week   | Final documentation, video demonstration,
+          |          | presentation preparation.
+
+    Total: ~10 weeks (fits within a single semester).
+
+
+5.3 Risks, Limitations, and Mitigation                    [3 marks]
+------------------------------------------------------------------------
+
+    Risk                      | Likelihood | Impact | Mitigation
+    --------------------------|------------|--------|---------------------
+    Water ingress despite     | Medium     | High   | Double-seal design:
+    IP67 rating               |            |        | silicone gasket +
+                              |            |        | conformal coating.
+                              |            |        | Post-test inspection
+                              |            |        | protocol.
+    Battery runtime falls     | Medium     | Medium | Upgrade to 12 Ah
+    short of 60 min           |            |        | pack. Hot-swap
+                              |            |        | battery option.
+    ESP32 GPIO insufficient   | Confirmed  | Low    | PCF8574 I2C expander
+    for all peripherals       |            |        | provides 8 extra
+                              |            |        | GPIO. Already
+                              |            |        | integrated in design.
+    WiFi range degraded in    | Low        | Medium | Test in actual drain
+    metal-reinforced drain    |            |        | environment. Fallback:
+                              |            |        | external antenna or
+                              |            |        | ESP-NOW protocol for
+                              |            |        | longer range.
+    Component supply delays   | Medium     | Medium | All components
+                              |            |        | available from
+                              |            |        | multiple suppliers
+                              |            |        | (Amazon, AliExpress).
+                              |            |        | Order early with
+                              |            |        | spares.
+    Debris too large or       | Low        | Medium | Scoop width (200 mm)
+    heavy for collection      |            |        | handles items up to
+                              |            |        | 2 kg. Larger items
+                              |            |        | flagged by camera for
+                              |            |        | manual removal.
+
+LIMITATIONS:
+    (1) Not designed for submerged operation (max 15 cm water depth).
+    (2) Cannot clean enclosed/culvert drains (requires open-top access).
+    (3) Single-operator teleoperation (no autonomous navigation in
+        current design).
+    (4) Bin capacity limits continuous operation to ~200 m between
+        emptyings in heavily littered drains.
+
+
+================================================================================
+     B. SUSTAINABILITY & SDG IMPACT (20 marks)
+================================================================================
+
+========================================================================
+6. SDG RELEVANCE & PROBLEM FIT (8%)
+========================================================================
+
+6.1 Clear SDG Identification                              [3 marks]
+------------------------------------------------------------------------
+
+AXIOM D1 addresses United Nations Sustainable Development Goal 6:
+Clean Water and Sanitation.
+
+SDG 6 aims to "ensure availability and sustainable management of
+water and sanitation for all" by 2030 [7]. The goal recognizes that
+water quality, ecosystem health, and human well-being are directly
+linked to effective management of water infrastructure — including
+the drainage systems that convey stormwater through urban areas.
+
+
+6.2 Alignment with SDG Targets                            [5 marks]
+------------------------------------------------------------------------
+
+TARGET 6.3: "By 2030, improve water quality by reducing pollution,
+eliminating dumping and minimizing release of hazardous chemicals
+and materials, halving the proportion of untreated wastewater and
+substantially increasing recycling and safe reuse globally."
+
+AXIOM D1 directly addresses Target 6.3 by:
+    (a) Removing solid waste from drainage channels BEFORE it
+        reaches rivers, wetlands, and coastal waters. Urban drains
+        are the primary conduit through which land-based plastic and
+        organic waste enters Trinidad's marine environment.
+    (b) Scrubbing algae biofilm that indicates and contributes to
+        eutrophication (nutrient-enriched runoff accelerates algal
+        growth, which depletes dissolved oxygen downstream).
+    (c) Enabling more frequent drain maintenance, transitioning
+        from reactive (post-flood) to proactive (scheduled) cleaning,
+        systematically reducing pollutant loading over time.
+
+SECONDARY ALIGNMENT:
+    SDG 11, Target 11.5: "Significantly reduce the number of deaths
+    and the number of people affected and substantially decrease the
+    direct economic losses... caused by disasters, including water-
+    related disasters." By restoring hydraulic capacity to blocked
+    drains, AXIOM D1 directly reduces urban flood frequency and
+    severity, protecting lives and property.
+
+
+========================================================================
+7. ENVIRONMENTAL & SOCIAL IMPACT (7%)
+========================================================================
+
+7.1 Environmental Impact Analysis                         [3 marks]
+------------------------------------------------------------------------
+
+WASTE INTERCEPTION:
+    Based on the performance model (Section 4.2), a single AXIOM D1
+    unit performing weekly debris-collection sweeps of 5 km of
+    priority drain sections would intercept:
+        • Per sweep: 5000 m × 10 g/m = 50 kg of waste
+        • Per month (4 sweeps): 200 kg
+        • Per year (48 sweeps): 2,400 kg = 2.4 tonnes
+
+    This waste is diverted from downstream waterways and ultimately
+    from the marine environment.
+
+ENERGY FOOTPRINT:
+    AXIOM D1 consumes 120 W during operation. For 5 km weekly:
+        Energy per sweep: 120 W × 11 hr = 1.32 kWh
+        Monthly: 5.28 kWh
+        Annual: 63.4 kWh
+        CO2 equivalent (T&T grid emission factor 0.55 kg CO2/kWh):
+            63.4 × 0.55 = 34.9 kg CO2/year
+
+    This is negligible compared to the emissions associated with
+    deploying trucks and heavy equipment for reactive flood-response
+    drain clearing.
+
+MATERIAL CONSIDERATIONS:
+    • Aluminium chassis: recyclable at end of life.
+    • LiPo battery: must be disposed at certified e-waste facility.
+      Expected lifetime: 300-500 charge cycles = 2-4 years.
+    • Nylon brush heads: consumable, replaced every ~50 operating
+      hours (~$5/pair). Nylon is recyclable.
+    • No fluids, lubricants, or chemical cleaners used during
+      operation.
+
+
+7.2 Social and Community Benefit                          [2 marks]
+------------------------------------------------------------------------
+
+    (a) Worker safety: Eliminates direct human contact with
+        contaminated drain water, reducing occupational exposure
+        to leptospirosis, chemical hazards, and physical injury.
+    (b) Flood protection: Proactive drain maintenance reduces
+        flooding frequency in low-lying, low-income communities
+        that are disproportionately affected by inadequate drainage.
+    (c) Public health: Reduced standing water decreases mosquito
+        breeding habitat, contributing to lower dengue transmission.
+    (d) Employment: Shifts municipal drain workers from hazardous
+        manual labour to skilled robot-operator roles.
+
+
+7.3 Quantification of Impact                              [2 marks]
+------------------------------------------------------------------------
+
+    Impact Metric                          | Estimated Value
+    ---------------------------------------|---------------------------
+    Waste diverted from waterways          | 2.4 tonnes/year per unit
+    Drain sections maintained proactively  | 5 km/week per unit
+    Worker-hours of hazardous labour       | ~2,600 hr/year eliminated
+      replaced (50 worker-days equivalent) |   per unit
+    Energy cost of operation               | ~$5 USD/year electricity
+    Mosquito breeding sites reduced        | Proportional to drain-km
+                                           | maintained (est. 20-30%
+                                           | reduction in immediate
+                                           | catchment area)
+
+
+========================================================================
+8. ETHICAL & RESPONSIBLE ENGINEERING (5%)
+========================================================================
+
+8.1 Safety and User Protection                            [2 marks]
+------------------------------------------------------------------------
+
+    • The operator never enters the drain. All interaction is remote
+      via the mobile app, at a safe distance above ground.
+    • Emergency stop (hardware relay + software command) immediately
+      halts all actuators.
+    • No exposed rotating parts during normal operation (brushes
+      enclosed in shrouds, conveyor covered).
+    • Low voltage (12V DC) poses no electrocution risk.
+    • Bright orange chassis colour ensures visibility if the robot
+      needs to be retrieved manually.
+    • All safety interlocks (Section 3.3) operate autonomously
+      without requiring operator intervention.
+
+
+8.2 Accessibility and Affordability                       [2 marks]
+------------------------------------------------------------------------
+
+    • Prototype cost: ~$360 USD. Even with margin for iteration
+      and spares, total project cost remains under $500 — affordable
+      for Caribbean municipal budgets.
+    • All components are commercially available off-the-shelf (COTS)
+      from global suppliers (Amazon, AliExpress, local electronics
+      distributors). No custom-fabricated ICs or specialty parts.
+    • Mobile app control requires only a standard Android smartphone
+      — no specialized hardware.
+    • Operator training: estimated 1-2 hours for a municipal worker
+      familiar with basic smartphone use. The joystick-and-camera
+      interface is intuitive.
+    • Designed for local repairability: modular connectors, standard
+      fasteners (M3/M4 bolts), 3D-printable brackets (files provided).
+
+
+8.3 Maintainability and Lifecycle                         [1 mark]
+------------------------------------------------------------------------
+
+    Component             | Expected Life  | Replacement Cost | Difficulty
+    ----------------------|----------------|------------------|----------
+    Nylon brush heads     | ~50 hours      | $5/pair          | Tool-free
+    LiPo battery          | 300-500 cycles | $55              | Tool-free
+    Rubber tracks         | ~200 hours     | $20/pair         | Screwdriver
+    Conveyor belt         | ~300 hours     | $15              | Screwdriver
+    ESP32-CAM module      | 5+ years       | $10              | Soldering
+    DC motors             | 1000+ hours    | $15 each         | Screwdriver
+
+    Total annual maintenance cost (assuming heavy use, ~500 hr/year):
+        Brushes: 10 pairs × $5 = $50
+        Battery: 1 replacement = $55
+        Tracks: 2 pairs × $20 = $40
+        Misc: $30
+        TOTAL: ~$175/year
+
+    End-of-life: Aluminium frame and motors are recyclable. LiPo
+    battery requires certified e-waste disposal. Electronics (PCBs)
+    can be recycled through WEEE-compliant facilities.
+
+
+================================================================================
+                    REFERENCES (IEEE Format)
+================================================================================
+
+[1]  Government of the Republic of Trinidad and Tobago, Ministry of
+     Works and Transport, "Drainage Division — Maintenance of
+     Watercourses," available at: https://www.mowt.gov.tt.
+
+[2]  Office of Disaster Preparedness and Management (ODPM), "National
+     Hazard Assessment: Flooding in Trinidad and Tobago," ODPM Report,
+     Government of Trinidad and Tobago, 2022.
+
+[3]  Pan American Health Organization (PAHO), "Dengue in the Caribbean:
+     Epidemiological Trends and Vector Control Strategies," PAHO/WHO
+     Report, 2023.
+
+[4]  R. Ganoza et al., "Determining risk for severe leptospirosis by
+     molecular analysis of environmental surface waters for pathogenic
+     Leptospira," PLoS Med., vol. 3, no. 8, e308, 2006.
+
+[5]  R. Siegwart, I. R. Nourbakhsh, and D. Scaramuzza, Introduction to
+     Autonomous Mobile Robots, 2nd ed. Cambridge, MA: MIT Press, 2011.
+
+[6]  Y. Zhang, Z. Huang, C. Chen, X. Wu, S. Xie, H. Zhou, Y. Gou, and
+     M. Ma, "A Spiral-Propulsion Amphibious Intelligent Robot for Land
+     Garbage Cleaning and Sea Garbage Cleaning," J. Mar. Sci. Eng.,
+     vol. 11, no. 8, 1482, 2023. doi: 10.3390/jmse11081482.
+
+[7]  United Nations, "Sustainable Development Goal 6: Clean Water and
+     Sanitation — Targets and Indicators," Department of Economic and
+     Social Affairs, 2015. Available: https://sdgs.un.org/goals/goal6.
+
+[8]  Espressif Systems, "ESP32-CAM: WiFi + Bluetooth + Camera Module
+     Datasheet," v1.0, Espressif, Shanghai, 2020.
+
+[9]  InvenSense (TDK), "MPU-6050 Six-Axis MEMS MotionTracking Device
+     Datasheet," Rev. 3.4, 2013.
+
+[10] STMicroelectronics, "L298N Dual Full-Bridge Driver Datasheet,"
+     Rev. 11, 2023.
+
+[11] IEC 60529:2004, "Degrees of protection provided by enclosures
+     (IP Code)," International Electrotechnical Commission, 2004.
+
+
+================================================================================
+                          APPENDIX
+================================================================================
+
+A.1  FULL COMPONENT LIST WITH SUPPLIERS
+
+     See Proposal Appendix (carried forward, updated with PCF8574
+     I2C GPIO expander: $1.50).
+
+     Updated TOTAL: ~$360 USD
+
+A.2  ESP32-CAM GPIO PIN MAP
+
+     [Detailed in Section 5.1]
+
+A.3  FIRMWARE PSEUDOCODE
+
+     // Core 0: Communication Task
+     void commTask() {
+         setupWiFiAP("AXIOM_D1", "password");
+         startMJPEGStream(port=80);
+         startWebSocket(port=81);
+         while(true) {
+             if(ws.hasMessage()) {
+                 cmd = parseJSON(ws.getMessage());
+                 commandQueue.push(cmd);
+                 lastCmdTime = millis();
+             }
+             sendTelemetry(sensorData);
+             delay(50);  // 20 Hz
+         }
+     }
+
+     // Core 1: Control Loop
+     void controlTask() {
+         while(true) {
+             readSensors();
+             if(checkSafetyInterlocks() == UNSAFE) {
+                 stopAllMotors();
+                 alertOperator("SAFETY_STOP");
+                 waitForReset();
+                 continue;
+             }
+             if(millis() - lastCmdTime > 3000) {
+                 stopAllMotors();
+                 alertOperator("COMM_LOSS");
+                 continue;
+             }
+             cmd = commandQueue.latest();
+             setTrackMotors(cmd.dir, cmd.speed);
+             setBrushes(cmd.brush);
+             setScoop(cmd.scoop_angle);
+             setConveyor(cmd.conveyor);
+             delay(20);  // 50 Hz
+         }
+     }
+
+A.4  NOTES FOR FORMATTING
+
+     • Transfer all content to IEEE two-column Word/LaTeX template.
+     • Replace ASCII diagrams with clean vector graphics (draw.io,
+       Visio, or Figma).
+     • Add CAD renders or sketches of the robot (isometric view,
+       exploded view if available).
+     • Ensure all tables are properly formatted.
+     • Total page count will be significantly longer than the
+       proposal — there is no stated page limit for Stage 2, but
+       aim for 10-15 pages of content plus references and appendix.

@@ -1,0 +1,351 @@
+================================================================================
+                   UWIRS x ESS Robotics Design Competition
+                     Proposal Stage Submission — DRAFT
+================================================================================
+
+NOTE: This document is a content draft. Transfer to a Word/LaTeX template with
+two-column IEEE-style layout, Times New Roman 10–11pt, single spacing, and
+labelled figures before submission. Sections below map directly to the grading
+template and rubric.
+
+================================================================================
+                          COVER PAGE (Not Graded)
+================================================================================
+
+Team Name:          Code Blooded
+Team Members:       [Delano D. Waithe —  400011585]
+                    [Deborah — ID]
+                    [Enya — ID]
+                    
+Selected SDG:       SDG 6 — Clean Water and Sanitation
+Proposed System:    [SYSTEM NAME]
+Competition:        UWIRS x ESS Robotics Design Competition
+Date:               [03/03/2026]
+
+================================================================================
+              PROPOSAL CONTENT
+================================================================================
+
+------------------------------------------------------------------------
+1. PROBLEM DEFINITION AND CONTEXT (30 marks)
+------------------------------------------------------------------------
+
+PROBLEM STATEMENT
+
+    Urban drainage infrastructure across the Caribbean, particularly in
+Trinidad and Tobago, relies on networks of open concrete channels ranging
+from 0.45 m to 1.2 m in width and 0.3 m to 0.6 m in depth [1]. These
+drains accumulate solid waste — plastic bottles, bags, organic matter — and
+develop thick algae biofilm on their walls. Blockages restrict hydraulic
+capacity, causing severe urban flooding during the wet season (June –
+December) that damages property and displaces residents [2]. Standing water
+in clogged drains also creates breeding grounds for Aedes aegypti
+mosquitoes, the primary vector for dengue, Zika, and chikungunya — diseases
+that impose significant public health burdens on Caribbean Small Island
+Developing States (SIDS) [3].
+
+    Current maintenance is almost entirely manual: municipal workers enter
+drains with shovels and rakes to remove debris. This approach exposes
+workers to leptospirosis (contracted through contact with contaminated
+water), chemical hazards, sharp refuse, and physical injury [4]. Manual
+cleaning is also labour-intensive, infrequent, and reactive — drains are
+typically cleaned only after blockages cause flooding rather than through
+preventive maintenance. A robotics-based solution is appropriate because it
+removes human workers from hazardous drain environments, enables more
+frequent and systematic cleaning schedules, and can operate in the shallow
+water conditions that make drains inaccessible to conventional heavy
+equipment.
+
+ENGINEERING CONSTRAINTS AND ASSUMPTIONS
+
+    Constraint                  | Justification
+    ----------------------------|----------------------------------------------
+    Width ≤ 0.40 m              | Must fit within the narrowest standard
+                                | open drains (0.45 m) with clearance.
+    Mass ≤ 15 kg                | Portable by two persons for field
+                                | deployment at any drain access point.
+    Water depth 0–15 cm         | Shallow standing water typical of partially
+                                | blocked drains; not designed for submerged
+                                | or deep-water operation.
+    IP67 electronics enclosure  | Withstands temporary immersion to 1 m for
+                                | 30 min per IEC 60529; essential for splash
+                                | and shallow-water conditions.
+    Battery-powered (12 V)      | No mains power available at drain sites;
+                                | 12 V is standard for available DC motors
+                                | and compatible with LiPo packs.
+    Prototype cost < $500 USD   | Realistic student budget; uses COTS
+                                | components (ESP32, standard DC motors,
+                                | 3D-printed brackets).
+    Wireless range ≥ 50 m       | Operator remains above ground at drain
+                                | access point; 2.4 GHz WiFi sufficient.
+    Emergency stop              | Hard-wired kill switch and software E-stop
+                                | to halt all actuators immediately.
+
+    Assumptions: (1) Drains are open-top concrete channels with vehicle or
+    pedestrian access nearby for deployment. (2) Debris consists primarily
+    of plastic waste and organic matter < 2 kg per item. (3) Ambient
+    temperature 25–35 °C (tropical climate; no cold-weather considerations).
+
+MEASURABLE GOALS
+
+    Metric                          | Target
+    --------------------------------|----------------------------
+    Debris collection rate          | ≥ 0.5 kg per 100 m pass
+    Algae removal coverage          | ≥ 80% of contacted surface
+    Operating speed (in drain)      | 0.10 – 0.20 m/s
+    Continuous battery life         | ≥ 60 minutes
+    Drain length per charge         | ≥ 400 m
+    Max. operating water depth      | 15 cm
+    Deployment time (unpack to run) | ≤ 5 minutes
+
+------------------------------------------------------------------------
+2. CONCEPTUAL ROBOTICS APPROACH (40 marks)
+------------------------------------------------------------------------
+
+ROBOT/PLATFORM SELECTION AND JUSTIFICATION
+
+    [SYSTEM NAME] is a compact, tracked amphibious robot designed
+specifically for shallow-drain maintenance. A tracked (caterpillar)
+platform was selected over wheeled or legged alternatives for the following
+engineering reasons:
+
+    (a) Traction — Rubber tracks provide continuous ground contact across
+        wet, silt-covered, and algae-slippery drain floors where wheels
+        would lose grip [5].
+    (b) Obstacle traversal — Tracks can climb over small debris
+        accumulations and raised drain joints (up to ~5 cm) without
+        becoming stuck.
+    (c) Load distribution — The wider contact patch prevents the robot from
+        sinking into soft sediment layers that accumulate in unmaintained
+        drains.
+    (d) Amphibious operation — Rubber tracks function in both dry and
+        shallow-water conditions without modification, unlike wheel-based
+        systems that require separate waterproofing for hub bearings.
+    (e) Differential steering — Two independently driven tracks enable
+        zero-radius turning, critical for manoeuvring within the confined
+        width of drainage channels.
+
+    The platform integrates three functional mechanisms:
+    • Front-mounted scoop and conveyor belt for solid waste collection
+    • Side-mounted rotating nylon brush assemblies for algae scrubbing
+    • Onboard sealed collection bin (~5 L) with mesh drainage
+
+    This combination addresses both primary drain maintenance tasks — debris
+removal and biofilm cleaning — in a single pass, inspired by amphibious
+garbage-collection robot designs in the literature [6].
+
+SYSTEM ARCHITECTURE
+
+
+    The system comprises seven subsystems:
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                     SYSTEM BLOCK DIAGRAM                       │
+    │                                                                │
+    │  ┌──────────┐    WiFi 2.4GHz    ┌───────────────────────┐     │
+    │  │ Operator  │◄────────────────►│  ESP32-CAM Module      │     │
+    │  │ Mobile App│  (commands +     │  (WiFi + camera +      │     │
+    │  └──────────┘   video feed)     │   main controller)     │     │
+    │                                  └───────────┬───────────┘     │
+    │                                              │ UART/GPIO       │
+    │                          ┌───────────────────┼──────────┐      │
+    │                          │                   │          │      │
+    │                ┌─────────▼──┐  ┌─────────────▼───┐ ┌────▼───┐ │
+    │                │ Motor      │  │ Sensor Suite    │ │ Safety │ │
+    │                │ Driver     │  │ • Ultrasonic ×2 │ │ Module │ │
+    │                │ Board      │  │ • IMU (MPU6050) │ │ • E-stop│ │
+    │                │ (L298N ×2) │  │ • Water level   │ │ • Fuse │ │
+    │                └──┬──┬──┬──┘  └─────────────────┘ └────────┘ │
+    │           ┌───────┘  │  └────────┐                            │
+    │     ┌─────▼────┐ ┌───▼────┐ ┌────▼─────┐  ┌──────────────┐  │
+    │     │Track     │ │Brush   │ │Conveyor  │  │ Power System │  │
+    │     │Motors ×2 │ │Motors  │ │+ Scoop   │  │ 12V 10Ah     │  │
+    │     │(12V DC   │ │×2 (12V │ │Servo+DC  │  │ LiPo + BMS   │  │
+    │     │gear)     │ │DC)     │ │motor     │  │ → 120 Wh     │  │
+    │     └──────────┘ └────────┘ └──────────┘  └──────────────┘  │
+    │                                                              │
+    │     LOCOMOTION    CLEANING   COLLECTION       POWER          │
+    └──────────────────────────────────────────────────────────────┘
+
+    1. Locomotion — Two 12 V DC gear motors (each ~3 A under load) drive
+       rubber caterpillar tracks via sprocket-and-chain. Differential speed
+       control enables steering.
+    2. Collection — A front-mounted scoop (servo-actuated tilt) feeds debris
+       onto a short conveyor belt (small DC motor) that deposits waste into a
+       sealed 5 L collection bin with mesh drain holes.
+    3. Cleaning — Two rotating nylon brush assemblies (12 V DC, ~1 A each) on
+       adjustable mounts scrub algae from drain floor and walls.
+    4. Sensing — Two ultrasonic sensors (HC-SR04) for forward and rear
+       obstacle detection; MPU6050 IMU for tilt/orientation; resistive water-
+       level sensor to monitor depth.
+    5. Control — ESP32-CAM serves as main controller, handling WiFi
+       communication, live video streaming, and GPIO control of motor
+       drivers.
+    6. Communication — 2.4 GHz WiFi link to a mobile app providing live
+       camera feed and directional controls; range ~50 m line-of-sight.
+    7. Power — 12 V, 10 Ah LiPo battery pack with battery management system
+       (BMS) and 15 A fuse protection; total capacity 120 Wh.
+
+FEASIBILITY
+
+    Power consumption estimate:
+        Track motors:    2 × 3.0 A  =  6.0 A
+        Brush motors:    2 × 1.0 A  =  2.0 A
+        Conveyor + scoop:             1.5 A
+        ESP32 + sensors:              0.5 A
+        ─────────────────────────────────
+        Total draw:                  10.0 A
+
+    Runtime = 10 Ah ÷ 10.0 A = 1.0 hour (continuous full-load)
+
+    Drain coverage per charge:
+        Average speed = 0.15 m/s
+        Effective operating time = 60 min × 0.75 (duty cycle) = 45 min
+        Coverage = 0.15 m/s × 2700 s = 405 m  ✓ (exceeds 400 m target)
+
+    Collection capacity:
+        5 L bin ≈ 2–3 kg mixed plastic/organic debris
+        Sufficient for approximately 200 m of moderately littered drain
+        before requiring emptying.
+
+    Estimated prototype cost:
+        Tracked chassis + frame:      $70
+        DC gear motors + drivers:     $50
+        Brush assemblies:             $30
+        Conveyor + scoop mechanism:   $40
+        ESP32-CAM + sensors:          $25
+        12 V 10 Ah LiPo + BMS:       $55
+        Waterproof enclosure (ABS):   $40
+        Miscellaneous (wiring, etc.): $50
+        ─────────────────────────────────
+        Total:                       ~$360 USD  ✓ (within $500 budget)
+
+------------------------------------------------------------------------
+3. SUSTAINABILITY AND SDG ALIGNMENT (20 marks)
+------------------------------------------------------------------------
+
+SDG RELEVANCE
+
+    [SYSTEM NAME] directly addresses United Nations Sustainable Development
+Goal 6: Clean Water and Sanitation, specifically Target 6.3: "By 2030,
+improve water quality by reducing pollution, eliminating dumping and
+minimizing release of hazardous chemicals and materials, halving the
+proportion of untreated wastewater and substantially increasing recycling
+and safe reuse globally" [7].
+
+    Urban drains serve as the primary conduit through which land-based solid
+waste enters rivers, wetlands, and coastal waters in Trinidad and Tobago.
+By systematically removing debris and algae from drainage channels before
+they reach downstream water bodies, the robot directly reduces pollutant
+loading on aquatic ecosystems. Additionally, the system supports SDG Target
+11.5 (reduce deaths and losses from water-related disasters) by restoring
+hydraulic capacity to blocked drains, thereby mitigating urban flood risk.
+
+ENVIRONMENTAL AND SOCIAL IMPACT
+
+    Environmental benefits:
+    • Each deployment session can remove an estimated 2–5 kg of solid waste
+      from drainage channels, diverting this material from waterways.
+    • Regular algae removal prevents eutrophication-driven oxygen depletion
+      in downstream water bodies.
+    • Battery-powered operation produces zero direct emissions during use.
+    • At a municipal scale, weekly robotic cleaning of priority drain
+      sections (~5 km) could intercept an estimated 50–130 kg of waste per
+      month before it reaches the marine environment.
+
+    Social and community benefits:
+    • Eliminates direct human contact with contaminated drain water,
+      reducing occupational exposure to leptospirosis and waterborne
+      pathogens.
+    • Proactive drain maintenance reduces urban flooding frequency,
+      protecting vulnerable low-income communities disproportionately
+      affected by flood damage [2].
+    • Low prototype cost (~$360) and use of widely available components
+      make the system replicable and affordable for Caribbean municipal
+      authorities.
+    • Requires minimal operator training (mobile-app-based control with
+      live video), enabling deployment by existing municipal maintenance
+      teams.
+
+------------------------------------------------------------------------
+4. SUMMARY
+------------------------------------------------------------------------
+
+    [SYSTEM NAME] is a compact, tracked amphibious robot that autonomously
+navigates shallow open drains to collect solid waste via a front-mounted
+scoop-and-conveyor system and scrub algae using rotating brush assemblies.
+By addressing SDG 6 (Clean Water and Sanitation), the system reduces
+pollutant discharge into Caribbean waterways, mitigates urban flood risk
+from blocked drains, and eliminates hazardous manual labour — offering a
+low-cost, replicable solution for proactive urban drain maintenance in
+Small Island Developing States.
+
+================================================================================
+                  REFERENCES
+================================================================================
+
+[1]  Government of the Republic of Trinidad and Tobago, Ministry of Works
+     and Transport, "Drainage Division — Maintenance of Watercourses,"
+     available at: https://www.mowt.gov.tt.
+
+[2]  K. Mycoo, "The Caribbean and Climate Change: Vulnerability,
+     Adaptation, and the Role of Urban Planning," J. Urban Plan. Dev.,
+     vol. 144, no. 4, 2018.
+
+[3]  Pan American Health Organization (PAHO), "Dengue in the Caribbean:
+     Epidemiological Trends and Vector Control Strategies," PAHO/WHO
+     Report, 2023.
+
+[4]  R. Ganoza et al., "Determining risk for severe leptospirosis by
+     molecular analysis of environmental surface waters for pathogenic
+     Leptospira," PLoS Med., vol. 3, no. 8, e308, 2006.
+
+[5]  R. Siegwart, I. R. Nourbakhsh, and D. Scaramuzza, Introduction to
+     Autonomous Mobile Robots, 2nd ed. Cambridge, MA: MIT Press, 2011.
+
+[6]  Y. Zhang, Z. Huang, C. Chen, X. Wu, S. Xie, H. Zhou, Y. Gou,
+     and M. Ma, "A Spiral-Propulsion Amphibious Intelligent Robot for
+     Land Garbage Cleaning and Sea Garbage Cleaning," J. Mar. Sci. Eng.,
+     vol. 11, no. 8, 1482, 2023. doi: 10.3390/jmse11081482.
+
+[7]  United Nations, "Sustainable Development Goal 6: Clean Water and
+     Sanitation — Targets and Indicators," Department of Economic and
+     Social Affairs, 2015. Available: https://sdgs.un.org/goals/goal6.
+
+================================================================================
+               APPENDIX
+================================================================================
+
+A.1  DETAILED COMPONENT LIST
+
+     Component                  | Specification         | Est. Cost (USD)
+     ---------------------------|-----------------------|----------------
+     Tracked chassis (aluminium)| 400×300×100 mm        | $70
+     DC gear motors ×2          | 12 V, 200 RPM, 5 Nm  | $30
+     L298N motor driver ×2      | Dual H-bridge, 2 A/ch| $20
+     Nylon brush motor ×2       | 12 V DC, 3000 RPM    | $20
+     Brush heads (nylon)        | 60 mm dia, replaceable| $10
+     Conveyor belt motor ×1     | 12 V DC, 100 RPM     | $15
+     Scoop servo ×1             | MG996R, 10 kg·cm     | $10
+     Conveyor belt (rubber)     | 200×80 mm loop       | $15
+     ESP32-CAM module           | WiFi + 2MP OV2640     | $10
+     HC-SR04 ultrasonic ×2      | Range: 2–400 cm       | $5
+     MPU6050 IMU                | 6-axis accel/gyro     | $5
+     Water level sensor          | Resistive, analog     | $3
+     LiPo battery 12V 10 Ah    | 3S2P, with BMS        | $55
+     ABS waterproof enclosure   | IP67, 200×150×80 mm   | $40
+     Wiring, connectors, misc.  | —                     | $25
+     3D-printed brackets/mounts | PLA/PETG filament     | $25
+     ─────────────────────────────────────────────────────────────
+     TOTAL                                               ~$358
+
+A.2  NOTES FOR FORMATTING
+
+     • Transfer cover page and proposal sections into a two-column
+       IEEE-style Word or LaTeX template.
+     • Replace the ASCII block diagram above with a clean, labelled
+       vector diagram (draw in draw.io, Visio, or similar).
+     • Add a rendered CAD image or sketch of the robot if available.
+     • Ensure all text, figures, and tables in Sections 1–4 fit within
+       the strict 2-page limit.
+     • Use Times New Roman, 10–11 pt, single-spaced.

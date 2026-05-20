@@ -1,0 +1,8 @@
+# Claude Code local config
+.claude/
+
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+System Volume Information/
+*.swp
