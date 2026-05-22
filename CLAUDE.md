@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AXIOM D1 — a compact tracked amphibious robot for cleaning shallow urban drainage channels in Trinidad and Tobago. Built for the UWIRS x ESS Robotics Design Competition (SDG 6: Clean Water and Sanitation).
+AXIOM D1 — a compact tracked amphibious robot for cleaning shallow urban drainage channels in Trinidad and Tobago. Built for the Virtana x U.W.I Engineering Student Society Robotics Design Competition (SDG 6: Clean Water and Sanitation), where it won first place.
 
 **Team:** Code Blooded (Delano D. Montplaisir, Deborah McDougall, Enya Cariah)
 

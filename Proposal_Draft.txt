@@ -1,5 +1,5 @@
 ================================================================================
-                   UWIRS x ESS Robotics Design Competition
+                   Virtana x U.W.I Engineering Student Society Robotics Design Competition
                      Proposal Stage Submission — DRAFT
 ================================================================================
 
@@ -7,6 +7,9 @@ NOTE: This document is a content draft. Transfer to a Word/LaTeX template with
 two-column IEEE-style layout, Times New Roman 10–11pt, single spacing, and
 labelled figures before submission. Sections below map directly to the grading
 template and rubric.
+
+RESULT: AXIOM D1 won first place at the Virtana x U.W.I Engineering Student
+Society Robotics Design Competition. (Proposal stage scored 91/100.)
 
 ================================================================================
                           COVER PAGE (Not Graded)
@@ -19,7 +22,7 @@ Team Members:       [Delano D. Waithe —  400011585]
                     
 Selected SDG:       SDG 6 — Clean Water and Sanitation
 Proposed System:    [SYSTEM NAME]
-Competition:        UWIRS x ESS Robotics Design Competition
+Competition:        Virtana x U.W.I Engineering Student Society Robotics Design Competition
 Date:               [03/03/2026]
 
 ================================================================================

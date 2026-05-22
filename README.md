@@ -2,9 +2,10 @@
 
 > A compact tracked amphibious robot for cleaning shallow urban drainage channels.
 
-![Competition](https://img.shields.io/badge/UWIRS%20%C3%97%20ESS-Robotics%20Design%20Competition-0a7?style=flat-square)
+![Result](https://img.shields.io/badge/Result-1st%20Place-FFD700?style=flat-square)
+![Competition](https://img.shields.io/badge/Virtana%20%C3%97%20UWI%20ESS-Robotics%20Design%20Competition-0a7?style=flat-square)
 ![SDG 6](https://img.shields.io/badge/UN%20SDG%206-Clean%20Water%20%26%20Sanitation-1f9?style=flat-square)
-![Stage 1](https://img.shields.io/badge/Proposal%20Stage-91%2F100-success?style=flat-square)
+![Proposal](https://img.shields.io/badge/Proposal%20Stage-91%2F100-success?style=flat-square)
 ![Simulation](https://img.shields.io/badge/Gazebo-Classic%2011.15.1-orange?style=flat-square)
 
 ![AXIOM D1 inside the drain channel](Axiom%201%20Media/Contact.png)
@@ -17,9 +18,9 @@
 
 **AXIOM D1** is a remotely operated, tracked robot designed to clean shallow urban
 drainage channels — collecting solid debris and scrubbing algae biofilm from drain
-floors and walls. It was developed by team **Code Blooded** for the **UWIRS × ESS
-Robotics Design Competition**, addressing **UN Sustainable Development Goal 6
-(Clean Water & Sanitation)**.
+floors and walls. It was developed by team **Code Blooded** for the **Virtana ×
+U.W.I Engineering Student Society Robotics Design Competition**, addressing **UN
+Sustainable Development Goal 6 (Clean Water & Sanitation)**.
 
 Clogged drains are a recurring cause of urban flooding in Trinidad and Tobago.
 Manual clearing is slow (~50–100 m per worker per day), hazardous, and exposes
@@ -27,8 +28,9 @@ workers directly to contaminated runoff. AXIOM D1 performs the same task remotel
 covering an estimated **~600 m per battery charge** at a fraction of the cost and
 with no direct hazard exposure.
 
-The project reached a proposal score of **91/100** at Stage 1, and the design was
-validated in a physics-based **Gazebo simulation** before fabrication.
+The Stage 1 proposal scored **91/100**, the design was validated in a physics-based
+**Gazebo simulation** before fabrication, and AXIOM D1 went on to win **first place
+overall** at the competition.
 
 ## Demo
 
@@ -153,4 +155,4 @@ python3 gazebo_sim/plot_sim_data.py   # requires matplotlib
 
 **Code Blooded** — Delano D. Montplaisir · Deborah McDougall · Enya Cariah
 
-Submitted for the UWIRS × ESS Robotics Design Competition.
+**First place** — Virtana × U.W.I Engineering Student Society Robotics Design Competition.

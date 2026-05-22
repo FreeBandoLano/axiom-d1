@@ -1,5 +1,5 @@
 ================================================================================
-         UWIRS x ESS Robotics Design Competition — Stage 2
+         Virtana x U.W.I Engineering Student Society Robotics Design Competition — Stage 2
                     FINAL DESIGN REPORT — DRAFT
                           AXIOM D1
 ================================================================================
@@ -8,6 +8,9 @@ NOTE: This is the content draft for the Final Design Stage (100% of marks).
 Transfer to IEEE two-column format (Times New Roman 10-11pt, single spacing)
 with clean vector diagrams before submission. Every section maps directly to
 a rubric criterion with mark allocation noted.
+
+RESULT: AXIOM D1 won first place at the Virtana x U.W.I Engineering Student
+Society Robotics Design Competition.
 
 ================================================================================
                           COVER PAGE
@@ -19,7 +22,7 @@ Team Members:       Delano D. Montplaisir — 400011585
                     Enya Cariah — 816050460
 Selected SDG:       SDG 6 — Clean Water and Sanitation
 System Name:        AXIOM D1
-Competition:        UWIRS x ESS Robotics Design Competition
+Competition:        Virtana x U.W.I Engineering Student Society Robotics Design Competition
 Date:               [SUBMISSION DATE]
 
 ================================================================================
